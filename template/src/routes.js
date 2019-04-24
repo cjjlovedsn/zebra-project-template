@@ -1,8 +1,9 @@
 
 import _path from 'path'
 import store from './store'
-const ctx = require.context('./views', true, /^((?!\.config\b).)*\.(vue|js)$/, 'lazy')
+const ctx = require.context('./views', true, /^((?!\.config\b|\/error\/).)*\.(vue|js)$/, 'lazy')
 const configCtx = require.context('./views', true, /\.config\.js$/)
+const errorCtx = require.context('./views', true, /error\/(404|500).(vue|js)$/)
 
 const files = ctx.keys()
 const configFiles = configCtx.keys()
@@ -76,7 +77,7 @@ const createRoute = (file, isNest) => {
           if (valid) {
             next()
           } else {
-            next('/404')
+            next('/error/404')
           }
         } catch (error) {
           next('/500')
@@ -89,6 +90,13 @@ const createRoute = (file, isNest) => {
   })
 }
 
-const routes = routeFiles.map(filePath => createRoute(filePath))
+const routes = [...errorCtx.keys().map(file => {
+  const [, name] = /(404|500).(vue|js)$/.exec(file)
+  return {
+    path: name === '404' ? '*' : '/500',
+    name,
+    component: () => import(`./views${file.slice(1)}`)
+  }
+}), ...routeFiles.map(filePath => createRoute(filePath))]
 
 export default routes
