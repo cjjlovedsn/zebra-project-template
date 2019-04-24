@@ -1,9 +1,11 @@
 
 import _path from 'path'
 import store from './store'
-const ctx = require.context('./views', true, /\.(vue|js)$/)
+const ctx = require.context('./views', true, /^((?!\.config\b).)*\.(vue|js)$/, 'lazy')
+const configCtx = require.context('./views', true, /\.config\.js$/)
 
 const files = ctx.keys()
+const configFiles = configCtx.keys()
 const routeFiles = files.filter(key => !/\b(components?|layout|lib|assets|config)\b/.test(key))
 
 const createRoute = (file, isNest) => {
@@ -16,8 +18,9 @@ const createRoute = (file, isNest) => {
 
   // 额外的配置
   const configPath = dir + '.config.js'
-  if (files.includes(configPath)) {
-    const { validate, ...config } = ctx(configPath)
+  if (configFiles.includes(configPath)) {
+    const _config = configCtx(configPath)
+    const { validate, ...config } = _config.default || _config
     _validate = validate
     Object.assign(route, config)
   }
@@ -82,7 +85,7 @@ const createRoute = (file, isNest) => {
         next()
       }
     },
-    component: () => import(`./views${file.replace('.', '')}`)
+    component: () => ctx(file)
   })
 }
 
