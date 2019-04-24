@@ -69,10 +69,10 @@ const createRoute = (file, isNest) => {
   return Object.assign(route, {
     path,
     name,
-    beforeEnter: async (to, from, next) => {
+    beforeEnter: async (to, _, next) => {
       if (_validate) {
         try {
-          const valid = await _validate({ params: to.params, store })
+          const valid = await _validate.call(to, to.params, store)
           if (valid) {
             next()
           } else {
