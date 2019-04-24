@@ -82,7 +82,7 @@ const createRoute = (file, isNest) => {
         next()
       }
     },
-    component: () => import(`./pages${file.replace('.', '')}`)
+    component: () => import(`./views${file.replace('.', '')}`)
   })
 }
 
