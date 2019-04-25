@@ -1,30 +1,19 @@
-
 import _path from 'path'
 import store from './store'
 const ctx = require.context('./views', true, /^((?!\.config\b|\/error\/).)*\.(vue|js)$/, 'lazy')
 const configCtx = require.context('./views', true, /\.config\.js$/)
 const errorCtx = require.context('./views', true, /error\/(404|500).(vue|js)$/)
-
 const files = ctx.keys()
 const configFiles = configCtx.keys()
 const routeFiles = files.filter(key => !/\b(components?|layout|lib|assets|config)\b/.test(key))
 
-const createRoute = (file, isNest) => {
+const createRoute = (globalConfig) => (file, isNest) => {
   const dir = file.replace(/\.(vue|js)$/, '')
   const paths = dir.slice(2).split(/\//)
   let fileName = paths.pop() || ''
   let suffix = ''
   let route = {}
-  let _validate
 
-  // 额外的配置
-  const configPath = dir + '.config.js'
-  if (configFiles.includes(configPath)) {
-    const _config = configCtx(configPath)
-    const { validate, ...config } = _config.default || _config
-    _validate = validate
-    Object.assign(route, config)
-  }
   // 判断是否嵌套路由
   let children = routeFiles.filter(item => fileName && item.includes(dir) && item !== file)
   if (children.length > 0) {
@@ -40,7 +29,7 @@ const createRoute = (file, isNest) => {
   // 判断是否动态路由
   if (/_(.+)$/.test(fileName)) {
     fileName = RegExp.$1
-    const index = file.replace(RegExp(`_${fileName}\\.(vue|js)$`), 'index.vue')
+    const index = file.replace(RegExp(`_${fileName}\\.(vue|js)$`), 'index.$1')
     const paramsIsRequired = routeFiles.includes(index)
     // 生成动态路由
     suffix = `:${fileName}${paramsIsRequired ? '' : '?'}`
@@ -67,36 +56,64 @@ const createRoute = (file, isNest) => {
     path = '/'
   }
 
-  return Object.assign(route, {
+  Object.assign(route, {
     path,
     name,
-    beforeEnter: async (to, _, next) => {
-      if (_validate) {
-        try {
-          const valid = await _validate.call(to, to.params, store)
-          if (valid) {
-            next()
-          } else {
-            next('/error/404')
-          }
-        } catch (error) {
-          next('/500')
-        }
-      } else {
-        next()
-      }
-    },
     component: () => ctx(file)
   })
+
+  if (typeof globalConfig === 'function') {
+    Object.assign(route, globalConfig(route, file))
+  } else {
+    Object.assign(route, globalConfig)
+  }
+
+  // 额外的配置
+  const configPath = dir + '.config.js'
+  if (configFiles.includes(configPath)) {
+    const conf = configCtx(configPath)
+    const { validate, ...config } = conf.default || conf
+    Object.assign(route, config)
+    if (validate) {
+      route.beforeEnter = async (to, _, next) => {
+        if (validate) {
+          try {
+            const valid = await validate.call(to, { params: to.params, store })
+            if (valid) {
+              next()
+            } else {
+              next('404')
+            }
+          } catch (error) {
+            next('/500')
+          }
+        } else {
+          next()
+        }
+      }
+    }
+  }
+
+  return route
 }
 
-const routes = [...errorCtx.keys().map(file => {
+// error页面
+const errorPages = errorCtx.keys().map(file => {
   const [, name] = /(404|500).(vue|js)$/.exec(file)
   return {
     path: name === '404' ? '*' : '/500',
     name,
     component: () => import(`./views${file.slice(1)}`)
   }
-}), ...routeFiles.map(filePath => createRoute(filePath))]
+})
 
-export default routes
+const getRoutes = (options = {}) => {
+  const { extend } = options
+  const routes = routeFiles.map(file => createRoute(extend)(file))
+  return [
+    ...errorPages,
+    ...routes
+  ]
+}
+
+export default getRoutes
