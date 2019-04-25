@@ -1,4 +1,4 @@
-import _path from 'path'
+import { join } from 'path'
 import store from './store'
 const ctx = require.context('./views', true, /^((?!\.config\b|\/error\/).)*\.(vue|js)$/, 'lazy')
 const configCtx = require.context('./views', true, /\.config\.js$/)
@@ -6,25 +6,44 @@ const errorCtx = require.context('./views', true, /error\/(404|500).(vue|js)$/)
 const files = ctx.keys()
 const configFiles = configCtx.keys()
 const routeFiles = files.filter(key => !/\b(components?|layout|lib|assets|config)\b/.test(key))
+const exclude = []
+// 嵌套的排在前面，方便处理嵌套路由，防止嵌套路由二次添加
+routeFiles.sort((a, b) => b.length - a.length)
+// 动态路由往后排，防止同级非动态路由被覆盖
+routeFiles.sort((a) => a.indexOf('_'))
 
 const createRoute = (globalConfig) => (file, isNest) => {
+  if (exclude.includes(file)) return
   const dir = file.replace(/\.(vue|js)$/, '')
   const paths = dir.slice(2).split(/\//)
   let fileName = paths.pop() || ''
-  let suffix = ''
   let route = {}
   let _validate
+
+  // 生成path
+  const getPath = (suffix) => {
+    const pname = fileName.replace(/^index$/, '')
+    let path = ''
+    if (isNest) {
+      path = [...paths.slice(1), suffix || pname].join('/')
+      exclude.push(file)
+    } else {
+      path = join('/', ...paths, suffix || pname)
+    }
+    return path
+  }
+  let path = getPath()
 
   // 判断是否嵌套路由
   let children = routeFiles.filter(item => fileName && item.includes(dir) && item !== file)
   if (children.length > 0) {
     route.children = children.map((file, index) => {
-      const r = createRoute(file, true)
+      const r = createRoute(globalConfig)(file, true)
       if (index === 0) {
-        route.redirect = r.name
+        route.redirect = join(path, r.path)
       }
       return r
-    })
+    }).filter(item => item !== undefined)
   }
 
   // 判断是否动态路由
@@ -32,22 +51,11 @@ const createRoute = (globalConfig) => (file, isNest) => {
     fileName = RegExp.$1
     const index = file.replace(RegExp(`_${fileName}\\.(vue|js)$`), 'index.$1')
     const paramsIsRequired = routeFiles.includes(index)
+    console.log(paramsIsRequired)
     // 生成动态路由
-    suffix = `:${fileName}${paramsIsRequired ? '' : '?'}`
+    const suffix = `:${fileName}${paramsIsRequired ? '' : '?'}`
+    path = getPath(suffix)
     route.props = true
-  }
-
-  // 生成path
-  let path
-  const pname = fileName.replace(/^index$/, '')
-  if (isNest) {
-    path = [...paths.slice(1), suffix || pname].join('/')
-    const index = routeFiles.findIndex(item => item !== file)
-    if (index > -1) {
-      routeFiles.splice(index, 1)
-    }
-  } else {
-    path = _path.join('/', ...paths, suffix || pname)
   }
 
   // 生成name
@@ -118,7 +126,7 @@ const errorPages = errorCtx.keys().map(file => {
 
 const getRoutes = (options = {}) => {
   const { extend } = options
-  const routes = routeFiles.map(file => createRoute(extend)(file))
+  const routes = routeFiles.map(file => createRoute(extend)(file)).filter(item => item !== undefined)
   return [
     ...errorPages,
     ...routes
