@@ -1,7 +1,24 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import routes from './routes'
+import getRoutes from './routes'
+
+const routes = getRoutes({
+  config: {
+    meta: {
+      title: 'zebra-c'
+    }
+  }
+})
 
 Vue.use(Router)
 
-export default new Router({ routes })
+const router = new Router({ routes })
+
+router.beforeEach((to, from, next) => {
+  if (to) {
+    document.title = to.meta.title
+  }
+  next()
+})
+
+export default router

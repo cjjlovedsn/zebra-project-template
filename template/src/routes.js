@@ -13,6 +13,7 @@ const createRoute = (globalConfig) => (file, isNest) => {
   let fileName = paths.pop() || ''
   let suffix = ''
   let route = {}
+  let _validate
 
   // 判断是否嵌套路由
   let children = routeFiles.filter(item => fileName && item.includes(dir) && item !== file)
@@ -59,7 +60,14 @@ const createRoute = (globalConfig) => (file, isNest) => {
   Object.assign(route, {
     path,
     name,
-    component: () => ctx(file)
+    component: async () => {
+      const component = await ctx(file)
+      const { validate } = component.default
+      if (validate) {
+        _validate = validate
+      }
+      return component
+    }
   })
 
   if (typeof globalConfig === 'function') {
@@ -73,12 +81,13 @@ const createRoute = (globalConfig) => (file, isNest) => {
   if (configFiles.includes(configPath)) {
     const conf = configCtx(configPath)
     const { validate, ...config } = conf.default || conf
+    _validate = validate
     Object.assign(route, config)
     if (validate) {
       route.beforeEnter = async (to, _, next) => {
         if (validate) {
           try {
-            const valid = await validate.call(to, { params: to.params, store })
+            const valid = await _validate.call(to, { params: to.params, store })
             if (valid) {
               next()
             } else {
