@@ -1,0 +1,8 @@
+@import '../variables';
+@import '../mixins';
+.float {
+  @include literal-iterator((left, right, none), float);
+}
+.clearfix {
+  @include clearfix;
+}

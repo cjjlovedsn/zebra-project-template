@@ -1,1 +1,83 @@
 // mixins
+@mixin clearfix {
+  &::before,
+  &::after {
+    content: '';
+    display: table;
+  }
+  &:after {
+    clear: both;
+  }
+}
+@mixin hover {
+  -webkit-transform: perspective(1px) translateZ(0);
+  transform: perspective(1px) translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+  overflow: hidden;
+  -webkit-transition-duration: 0.3s;
+  transition-duration: 0.3s;
+  -webkit-transition-property: color, background-color, border;
+  transition-property: color, background-color, border;
+}
+
+@mixin ellipsis($width: 100%, $true: false) {
+  width: $width;
+  white-space: if($true, nowrap, nowrap!important);
+  overflow: if($true, hidden, hidden!important);
+  text-overflow: if($true, ellipsis, ellipsis!important);
+}
+
+@mixin multi-line-ellipsis($line: 3) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $line;
+  overflow: hidden;
+}
+
+
+@mixin distance($attr, $max: 12, $r: 4) {
+  $sign: null !default;
+  @if $r < 0 {
+    $sign: n;
+  }
+  @each $pos, $value in $orient {
+    @for $i from 0 through $max {
+      $j: $i * $r;
+      @if $pos == a {
+        &#{$pos}-#{$sign}#{$i} {
+          #{$attr}: $j + px !important;
+        }
+      } @else if $pos == x {
+        &#{$pos}-#{$sign}#{$i} {
+          #{$attr}-left: $j + px !important;
+          #{$attr}-right: $j + px !important;
+        }
+      } @else if $pos == y {
+        &#{$pos}-#{$sign}#{$i} {
+          #{$attr}-top: $j + px !important;
+          #{$attr}-bottom: $j + px !important;
+        }
+      } @else {
+        &#{$pos}-#{$sign}#{$i} {
+          #{$attr}-#{$value}: $j + px !important;
+        }
+      }
+    }
+  }
+}
+
+@mixin literal-iterator($origin, $attr) {
+  @each $key in $origin {
+    &-#{'' + $key} {
+      #{$attr}: $key !important;
+    }
+  }
+}
+
+@mixin key-value-iterator($origin, $attr) {
+  @each $key, $value in $origin {
+    &-#{'' + $key} {
+      #{$attr}: $value !important;
+    }
+  }
+}

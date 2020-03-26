@@ -1,0 +1,13 @@
+/* 间距 */
+@import '../variables';
+@import '../mixins';
+
+.m {
+  @include distance(margin);
+  /* 负边距 */
+  @include distance(margin, 12, -4);
+}
+
+.p {
+  @include distance(padding);
+}

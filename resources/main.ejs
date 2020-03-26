@@ -1,0 +1,28 @@
+import Vue from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+<%_ if (options.elementUI) { _%>
+import '@/plugins/element.js'
+<%_ } _%>
+import VueCookie from 'vue-cookie'
+<%_ if (options.echarts) { _%>
+import './plugins/echarts'
+<%_ } _%>
+import '@/styles/index.scss'
+import '@/plugins/register'
+<%_ if (options.multiple) { _%>
+import './plugins/axios'
+<%_ } else { _%>
+import './axios' 
+<%_ } _%>
+
+Vue.config.productionTip = false
+
+Vue.use(VueCookie)
+
+new Vue({
+  router,
+  store,
+  render: h => h(App)
+}).$mount('#app')

@@ -1,0 +1,19 @@
+/* 栅格布局 */
+.row {
+  @include clearfix;
+  & > *[class^='col-'],
+  & > *[class*='col-'] {
+    float: left;
+  }
+  $cols: 24;
+  @for $i from 1 through $cols {
+    $num: ($i / $cols);
+    .col-#{$i} {
+      width: percentage($num);
+    }
+  }
+}
+
+.spacer {
+  flex-grow: 1!important;
+}

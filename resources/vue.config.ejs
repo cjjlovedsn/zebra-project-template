@@ -1,0 +1,136 @@
+const path = require('path')
+const CompressionPlugin = require('compression-webpack-plugin')
+const resolve = (...args) => path.join(__dirname, ...args)
+const {
+  NODE_ENV,
+  OUTPUT_DIR,
+  VIEWS_PATH,
+  VUE_APP_MOCK_URL,
+  VUE_APP_TEST_URL
+} = process.env
+const isProd = NODE_ENV === 'production'
+<%_ if (options.multiple) { _%>
+function appendHtmlWebpackOptions (args) {
+  if (args.length === 0) return args
+  args[0].v = Date.now()
+  args[0].isProd = isProd
+  return args
+}
+const pages = <%- pages %>
+<%_ } _%>
+
+function getPages (pages) {
+  return pages.reduce((result, name) => {
+    const filename = isProd && VIEWS_PATH ? resolve(VIEWS_PATH, `${name}.blade.php`) : `${name}.html`
+    result[name] = {
+      entry: `src/app/${name}/main.js`,
+      template: `public/${name}.html`,
+      filename
+    }
+    return result
+  }, {})
+}
+
+module.exports = {
+  outputDir: isProd && OUTPUT_DIR
+    ? resolve(OUTPUT_DIR)
+    : undefined,
+<%_ if (options.multiple) { _%>
+  pages: getPages(pages),
+<%_ } else { _%>
+  pages: {
+    index: {
+      entry: './src/main.js',
+      template: './public/index.html',
+      filename: isProd && VIEWS_PATH
+        ? resolve(VIEWS_PATH, 'index.blade.php')
+        : 'index.html'
+    }
+  },
+<%_ } _%>
+  chainWebpack: config => {
+  <%_ if (options.multiple) { _%>
+    pages.forEach(name => {
+      // 添加变更
+      config.plugin(`html-${name}`).tap(appendHtmlWebpackOptions)
+      // 添加别名
+      config.resolve.alias.set(name, resolve('./src/app', name))
+    })
+  <%_ } _%>
+  <%_ if (options.compressImage) { _%>
+    if (isProd) {
+      /* 图片压缩 */
+      config.module
+        .rule('images')
+        .use('image-webpack-loader')
+        .loader('image-webpack-loader')
+        .tap(() => {
+          return {
+            mozjpeg: {
+              progressive: true,
+              quality: 65
+            },
+            // optipng.enabled: false will disable optipng
+            optipng: {
+              enabled: false
+            },
+            pngquant: {
+              quality: '65-90',
+              speed: 4
+            }
+          }
+        })
+    }
+  <%_ } _%>
+  },
+  configureWebpack: config => {
+    if (isProd) {
+      return {
+        plugins: [
+          /* gzip压缩 */
+          new CompressionPlugin({
+            test: /\.js$|\.html$|.\css/, // 匹配文件名
+            threshold: 10240, // 对超过10k的数据压缩
+            deleteOriginalAssets: false // 不删除源文件
+          })
+        ]
+      }
+    }
+  },
+  devServer: {
+    public: 'local.data-stone.com',
+    open: false,
+    host: '0.0.0.0',
+    disableHostCheck: true,
+    proxy: {
+      '/mock': {
+        target: VUE_APP_MOCK_URL || 'http://127.0.0.1:3000',
+        changeOrigin: true
+      },
+      '/api': {
+        target: VUE_APP_TEST_URL || 'http://127.0.0.1:3000',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      }
+    },
+  <%_ if (options.multiple) { _%>
+    historyApiFallback: {
+      rewrites: pages.map(name => ({
+        from: new RegExp(`^/${name}`),
+        to: `/${name}.html`
+      }))
+    }
+  <%_ } _%>
+  },
+  pluginOptions: {
+    'style-resources-loader': {
+      preProcessor: 'scss',
+      patterns: [
+        resolve('./src/styles/variables.scss'),
+        resolve('./src/styles/mixins.scss'),
+      ]
+    }
+  }
+}

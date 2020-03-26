@@ -1,0 +1,52 @@
+
+/* 边框 */
+@import '../variables';
+@import '../mixins';
+.bd {
+  @each $p, $v in $orient {
+    @for $i from 1 through 5 {
+      @if $p == a {
+        &#{$i} {
+          border: ($i + px) solid $--border-color-base;
+        }
+      } @else {
+        &#{$p}#{$i} {
+          border-#{$v}-style: solid;
+          border-#{$v}-width: $i + px;
+          border-#{$v}-color: $--border-color-base;
+        }
+      }
+    }
+  }
+  @each $k, $v in $theme-colors {
+    &c-#{$k} {
+      border-color: $v !important;
+    }
+  }
+  @each $k in (solid, dashed, dotted, double, groove, inset, outset) {
+    &s-#{$k} {
+      border-style: $k !important;
+    }
+  }
+}
+
+.bdc {
+  border: 1px solid #ccc;
+}
+
+.bdc-light1 {
+  border-color: $--border-color-light;
+}
+
+/* 圆角 */
+.bdrs {
+  @for $i from 1 through 5 {
+    $v: $i * 2;
+    &#{$v} {
+      border-radius: $v + px !important;
+    }
+  }
+  &-round {
+    border-radius: 100% !important;
+  }
+}

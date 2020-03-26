@@ -1,8 +1,17 @@
 import Vue from 'vue'
 
+<%_ if (options.component) { _%>
 import {
   Button
 } from 'element-ui'
-
 Vue.prototype.$ELEMENT = { size: '<%= options.elementSize %>', zIndex: 3000 }
 Vue.use(Button)
+<%_ } else { _%>
+import Element from 'element-ui'
+<%_ if (options.theme) { _%>
+import '../element-variables.scss'
+<%_ } else { _%>
+import 'element-ui/lib/theme-chalk/index.css'
+<%_ } _%>
+Vue.use(Element, { size: '<%= options.elementSize %>' })
+<%_ } _%>

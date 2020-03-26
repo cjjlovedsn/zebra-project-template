@@ -1,0 +1,5 @@
+@import '../variables';
+@import '../mixins';
+.valign {
+  @include literal-iterator($align, vertical-align);
+}

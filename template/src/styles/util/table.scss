@@ -1,0 +1,31 @@
+.table-form {
+  min-width: 100%;
+  font-size: 14px;
+  border: $--table-border;
+  word-wrap: break-word; 
+  word-break: break-all;
+}
+
+.table-form table,
+.table-form tr,
+.table-form td {
+  border-collapse: collapse;
+}
+
+.table-form tr.is-hide {
+  height: 0;
+  td {
+    padding: 0;
+    border: 0 none;
+    min-width: 50px;
+  }
+}
+
+.table-form td {
+  padding: 16px 20px;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: normal;
+  border-right: $--table-border;
+  border-bottom: $--table-border;
+}

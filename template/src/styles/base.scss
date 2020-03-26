@@ -1,0 +1,23 @@
+/*
+* 去掉chrome下的input框黄色底色
+*/
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  box-shadow: 0 0 0 60px $--color-white inset;
+  -webkit-text-fill-color: $--color-primary;
+}
+
+body {
+  background-color: $--body-background-color;
+  color: $--color-text-primary;
+}
+
+a:focus {
+  outline:none;
+  -moz-outline:none;  
+}
+
+.material-icons {
+  font-size: inherit !important;
+}

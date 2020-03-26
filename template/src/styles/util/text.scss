@@ -1,0 +1,44 @@
+/* 文本工具样式 */
+@import '../mixins';
+
+.text {
+  /*
+   * 文字颜色
+  */
+  @include key-value-iterator($theme-colors, color);
+
+  
+  /*
+   * 对齐方式
+  */
+  @include literal-iterator($textAlign, text-align);
+
+  /*
+   * 文本截断
+  */
+  &-truncate {
+    white-space: nowrap!important;
+    overflow: hidden!important;
+    text-overflow: ellipsis!important;
+  }
+
+  /**
+   * 文本换行
+  */
+  &-no-wrap {
+    white-space: nowrap!important;
+  }
+}
+
+.font-weight {
+  @include key-value-iterator($weight, font-weight);
+}
+
+.font-size {
+  @include key-value-iterator($sizes, font-size);
+  @for $i from 1 through 10 {
+    &-#{$i} {
+      font-size: (6em / $i)!important;
+    }
+  }
+}

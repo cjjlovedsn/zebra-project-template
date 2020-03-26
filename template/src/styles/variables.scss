@@ -1,7 +1,73 @@
 // variables
-<%_ if (options.theme) { _%>
-@import '../lib/element-variables.scss';
-<%_ } else { _%>
-$--font-path: '~element-ui/lib/theme-chalk/fonts';
-@import "~element-ui/packages/theme-chalk/src/index";
-<%_ } _%>
+$--color-primary: teal;
+@import "~element-ui/packages/theme-chalk/src/common/var.scss";
+
+$--body-background-color: #ecf0f5;
+
+$theme-colors: (
+  default: $--color-info,
+  primary: $--color-primary,
+  success: $--color-success,
+  danger: $--color-danger,
+  warning: $--color-warning,
+  info: $--color-text-primary
+);
+
+$sizes: (
+  large: 20px,
+  medium: 18px,
+  base: 16px,
+  small: 14px,
+  mini: 12px,
+  tiny: 10px
+);
+
+$orient: (
+  a: all,
+  t: top,
+  r: right,
+  b: bottom,
+  l: left,
+  x: x,
+  y: y
+);
+
+$textAlign: (
+  left,
+  center,
+  right,
+);
+
+$display: (
+  none,
+  inline,
+  inline-block,
+  block,
+  table,
+  table-row,
+  table-cell,
+  flex,
+  inline-flex,
+);
+
+$weight: (
+  thin: 100,
+  light: 300,
+  regular: 400,
+  medium: 500,
+  bold: 700,
+  black: 900,
+);
+
+$align: (
+  baseline,
+  bottom,
+  inherit,
+  middle,
+  super,
+  sub,
+  text-bottom,
+  text-top,
+  initial,
+  unset
+);

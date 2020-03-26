@@ -1,0 +1,30 @@
+
+.base-form {
+  width: 100%;
+  overflow: auto;
+}
+
+.base-form__body {
+  min-width: 100%;
+  border: $--table-border;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.base-form-row {
+  height: auto;
+}
+.base-form__body td {
+  padding: 16px 0;
+}
+.base-form-cell {
+  padding: 0 20px;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: normal;
+}
+
+.base-form-cell__label {
+  &--hidden {
+    display: none!important;
+  }
+}

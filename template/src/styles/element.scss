@@ -1,0 +1,10 @@
+/* element-ui 增加样式类 */
+.el-form {
+  // 自动在label标签后添加冒号
+  &.colon {
+    .el-form-item__label:after {
+      content: "：";
+      display: inline;
+    }
+  }
+}
