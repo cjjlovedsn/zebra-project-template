@@ -211,22 +211,28 @@ export const responseFormat = {
     if (!data) return data
     if (typeof data === 'string') return Number(data) || 0
     if (isArray(data)) {
-      return data.map(item => responseFormat.string2number(item, fields, deep))
+      return deep ? data.map(item => responseFormat.string2number(item, fields, deep)) : data
     }
-    return fields.reduce((prev, field) => {
-      let origin = prev[field]
-      if (typeof origin === 'string') {
-        origin = Number(origin)
-        if (!isNaN(origin)) {
-          prev[field] = origin
+    if (typeof data === 'object') {
+      const format = value => {
+        if (typeof value === 'string') {
+          return Number(value)
         }
-        return prev
+        if (Array.isArray(value)) return value.map(Number)
+        if (deep && value && typeof value === 'object') return responseFormat.string2number(value, fields, deep)
+        return value
       }
-      if (deep && origin) {
-        origin = responseFormat.string2number(origin, fields, deep)
-      }
-      return prev
-    }, data)
+      return Object.keys(data).reduce((acc, key) => {
+        let origin = data[key]
+        if (fields.includes(key)) {
+          acc[key] = format(origin)
+        } else {
+          acc[key] = deep && origin && typeof origin === 'object' ? responseFormat.string2number(origin, fields, deep) : origin
+        }
+        return acc
+      }, {})
+    }
+    return data
   }
 }
 
@@ -361,34 +367,31 @@ export const echoHtml = str =>
     }[a]
   })
 
-export const allSettled = all => {
-  if (!Array.isArray(all)) throw new Error(`You must pass an array to 'allSettled'`)
-  return new Promise(resolve => {
-    const result = []
-    const len = all.length
-    let count = 0
-    all.forEach((item, i) => {
-      item.then(
-        value => {
-          result[i] = {
-            status: 'fulfilled',
-            value
-          }
-          count++
-          if (count === len) resolve(result)
-        },
-        (reason) => {
-          count++
-          result[i] = {
-            status: 'rejected',
-            reason
-          }
-          if (count === len) resolve(result)
+export const allSettled = requests => new Promise(resolve => {
+  const result = []
+  const len = requests.length
+  let count = 0
+  requests.forEach((item, i) => {
+    item.then(
+      value => {
+        result[i] = {
+          status: 'fulfilled',
+          value
         }
-      )
-    })
+        count++
+        if (count === len) resolve(result)
+      },
+      (reason) => {
+        count++
+        result[i] = {
+          status: 'rejected',
+          reason
+        }
+        if (count === len) resolve(result)
+      }
+    )
   })
-}
+})
 
 /**
  * 列筛选

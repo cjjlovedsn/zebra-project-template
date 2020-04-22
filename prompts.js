@@ -24,6 +24,26 @@ module.exports = [
     when: answer => answer.multiple
   },
   {
+    name: 'perms',
+    type: 'confirm',
+    message: '是否需要权限配置？',
+    default: false
+  },
+  {
+    name: 'permsFor',
+    type: 'list',
+    message: '请选择需要权限配置的模块',
+    choices: answer => answer.pages.split(','),
+    when: answer => answer.perms && answer.multiple
+  },
+  {
+    name: 'autoRoutes',
+    type: 'confirm',
+    message: '是否需要自动路由？',
+    default: false,
+    when: answer => !answer.perms
+  },
+  {
     name: 'proxy',
     type: 'input',
     message: '请输入测试环境服务器地址：'

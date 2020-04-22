@@ -1,0 +1,159 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+<% if (perms) { %>
+import getRoutes from './routes'
+import store from '../store'
+import {
+  UPDATE_TOKEN,
+  UPDATE_USERINFO
+} from '../store/mutation-types'
+<% } else if (auto) {%>
+import createRoutes from './generateRoutes'
+<% } %> 
+
+NProgress.configure({ showSpinner: false })
+
+<% if (perms) { %>
+const whiteList = [ '/login' ]
+<% } %>
+
+const routes = [
+  {
+    path: '/login',
+    name: 'login',
+    meta: {
+      title: '登录 - <%= title %>'
+    },
+    component: () => import('../views/login')
+  },
+  {
+    path: '/404',
+    meta: {
+      title: 'page not found - <%= title %>'
+    },
+    component: () => import('../views/error/404.vue')
+  },
+  {
+    path: '/403',
+    meta: {
+      title: '无访问权限 - <%= title %>'
+    },
+    component: () => import('../views/error/403.vue')
+  },
+  {
+    path: '/',
+    redirect: '/dashboard'
+  }
+  <% if (auto) {%> 
+  ...createRoutes({
+    extend: {
+      meta: {
+        title: '<%= title %>'
+      }
+    }
+  })
+<% } %> 
+]
+
+Vue.use(Router)
+
+<% if (perms) { %>
+let routeIsAdded = false
+
+const createRouter = () => {
+  routeIsAdded = false
+  return new Router({
+    scrollBehavior: () => ({ y: 0 }),
+    routes,
+    linkActiveClass: 'is-active',
+    linkExactActiveClass: 'is-active'
+  })
+}
+
+const router = createRouter()
+
+const addRoutes = (refresh) => store.dispatch(UPDATE_USERINFO, refresh).then(data => {
+  const routes = getRoutes(data, {
+    extend: {
+      meta: {
+        title: '<%= title %>'
+      }
+    }
+  })
+  router.addRoutes([
+    ...routes,
+    { path: '*', redirect: '/404' }
+  ])
+  routeIsAdded = true
+})
+
+router.beforeEach(async (to, from, next) => {
+  if (to) {
+    document.title = to.meta.title || '<%= title %>'
+  }
+  try {
+    const token = await getToken()
+    if (token) {
+      if (to.path === '/login') {
+        if (routeIsAdded) {
+          next({ path: '/' })
+        } else {
+          try {
+            await addRoutes(addRoutes)
+            next({ path: '/', replace: true })
+          } catch (error) {
+            console.error(error || 'Has Error')
+            next()
+          }
+        }
+        NProgress.done()
+      } else {
+        if (routeIsAdded) {
+          next()
+        } else {
+          // 更新用户权限
+          try {
+            await addRoutes()
+            next({ ...to, replace: true })
+          } catch (error) {
+            console.error(error || 'Has Error')
+            next(`/login?redirect=${to.path}`)
+            NProgress.done()
+          }
+        }
+      }
+    } else {
+      if (whiteList.includes(to.path)) {
+        next()
+      } else {
+        next(`/login?redirect=${to.path}`)
+        NProgress.done()
+      }
+    }
+  } catch (error) {
+    console.error(error || 'Has Error')
+    next(`/login?redirect=${to.path}`)
+    NProgress.done()
+  }
+})
+
+export const resetRouter = () => {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher
+}
+<% } else {%>
+const router = new Router({ routes })
+
+router.beforeEach((to, from, next) => {
+  if (to) {
+    document.title = to.meta.title || '<%= title %>'
+  }
+  next()
+})
+<% } %>
+
+router.afterEach(() => NProgress.done())
+
+export default router

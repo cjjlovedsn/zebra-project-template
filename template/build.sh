@@ -20,6 +20,21 @@ TEMP=`getopt -o hbmlr: --long help,build,map,log,remote:,path: -- "$@"`
 
 trap "rm $dist_file $deploy_file; exit" SIGHUP SIGINT SIGTERM
 
+  #这个脚本用于判断MAC下的getopt脚本为gnu-getopt
+check_opt() {
+  getopt --test
+  if [ "$?" != "4" ];then
+      brew -v > /dev/null
+      if [ "$?" != "0" ];then
+          echo 'Please install brew for Mac: ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+      fi
+      echo 'Please install gnu-getopt for Mac: brew install gnu-getopt'
+      exit 1
+  fi
+}
+
+check_opt
+
 show_usage()
 {
   cat <<EOF
@@ -64,7 +79,7 @@ create_sh() {
   # 判断文件是否存在
   echo "[ ! -f \"$2\" ] && \"error: 2\" && exit 1;" >> $deploy_file
   # 解压
-  echo "tar -zxvf $2" >> $deploy_file
+  echo "tar --no-same-owner -zxvf $2" >> $deploy_file
   echo "[ $? != 0 ] && \"error: 3\" && exit 1;" >> $deploy_file
   echo "[ -f $2 ] && rm -f $2;" >> $deploy_file
   echo "[ -f $deploy_file ] && rm -f $deploy_file;" >> $deploy_file

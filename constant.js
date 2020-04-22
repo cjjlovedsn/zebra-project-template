@@ -1,0 +1,1 @@
+exports.APP_DIR = './src/app'

@@ -51,48 +51,18 @@ module.exports = (api, options, rootOptions) => {
       }
     }
   })
+
+  if (options.multiple) {
+    api.render(files => {
+      Object.keys(files)
+        .filter(path => [ 'src/App.vue', 'src/main.js', 'src/router.js', 'src/store.js' ].some(keyword => path.includes(keyword)))
+        .forEach(path => delete files[path])
+    })
+  }
+
   // 安装elementUI
   if (options.elementUI) {
-    api.extendPackage({
-      dependencies: {
-        'element-ui': '^2.6.3'
-      }
-    })
-    // 自定义elementUI主题
-    if (options.theme) {
-      if (options.et) {
-        api.extendPackage({
-          scripts: {
-            'theme-build': 'et',
-            'theme-init': 'et --init ./src/lib/element-variables.scss'
-          },
-          devDependencies: {
-            'babel-plugin-component': '^1.1.1',
-            'element-theme': '^2.0.1',
-            'element-theme-chalk': '^2.6.3'
-          },
-          'element-theme': {
-            browsers: ['ie > 9', 'last 2 versions'],
-            out: './src/theme',
-            config: './src/theme-variables.scss',
-            theme: 'element-theme-chalk',
-            minimize: true,
-            components: ['button', 'message']
-          }
-        })
-        api.render({
-          './src/theme/README.md': './resources/theme/README.md',
-          './src/theme-variables.scss': './resources/theme-variables.ejs'
-        })
-      } else {
-        api.render({
-          './src/element-variables.scss': './resources/element-variables.scss'
-        })
-      }
-    }
-    api.render({
-      './src/plugins/element.js': './resources/element.ejs'
-    })
+    require('./element')(api, options)
   }
   // 安装echarts
   if (options.echarts) {
@@ -124,51 +94,19 @@ module.exports = (api, options, rootOptions) => {
     './babel.config.js': './resources/babel.config.ejs',
   })
   // 配置多页面
-  const pages = options.pages ? options.pages.split(',') : []
-  const titles = options.multiple && options.titles ? options.titles.split(',') : []
-  pages.forEach((page, index) => {
-    api.render({
-      [`./src/app/${page}/plugins/axios.js`]: './resources/axios.ejs',
-      [`./src/app/${page}/main.js`]: './resources/main.ejs',
-      [`./src/app/${page}/store/actions.js`]: './resources/store/actions.js',
-      [`./src/app/${page}/store/getters.js`]: './resources/store/getters.js',
-      [`./src/app/${page}/store/mutation-types.js`]: './resources/store/mutation-types.js',
-      [`./src/app/${page}/store/mutations.js`]: './resources/store/mutations.js',
-      [`./src/app/${page}/store/state.js`]: './resources/store/state.js',
-      [`./src/app/${page}/store/modules/README.md`]: './resources/store/modules/README.md',
-      [`./src/app/${page}/store/index.js`]: './resources/store.ejs',
-      [`./src/app/${page}/router.js`]: './resources/router.ejs',
-      [`./src/app/${page}/routes.js`]: './resources/routes.ejs',
-      [`./src/app/${page}/views/error/assets/ufo.png`]: './resources/views/error/assets/ufo.png',
-      [`./src/app/${page}/views/error/403.vue`]: './resources/views/error/403.vue',
-      [`./src/app/${page}/views/error/404.vue`]: './resources/views/error/404.vue',
-      [`./src/app/${page}/views/error/500.vue`]: './resources/views/error/500.vue',
-      [`./src/app/${page}/App.vue`]: './resources/App.vue',
-    }, { name: page, title: titles[index] })
-    if (options.echarts) api.render({ [`./src/app/${page}/plugins/echarts.js`]: './resources/echarts.ejs' })
-  })
-  if (!options.multiple) {
-    api.render({
-      './src/store/index.js': './resources/store.ejs',
-      './src/store/actions.js': './resources/store/actions.js',
-      './src/store/getters.js': './resources/store/getters.js',
-      './src/store/mutation-types.js': './resources/store/mutation-types.js',
-      './src/store/mutations.js': './resources/store/mutations.js',
-      './src/store/state.js': './resources/store/state.js',
-      './src/store/modules/README.md': './resources/store/modules/README.md',
-      './src/router.js': './resources/router.ejs',
-      './src/routes.js': './resources/routes.ejs',
-      './src/views/error/403.vue': './resources/views/error/403.vue',
-      './src/views/error/404.vue': './resources/views/error/404.vue',
-      './src/views/error/500.vue': './resources/views/error/500.vue',
-      './src/axios.js': './resources/axios.ejs',
-    }, { name: 'index', title: options.title })
-    if (options.echarts) api.render({ './src/plugins/echarts.js': './resources/echarts.ejs' })
+  require('./pages')(api, options)
+
+  // 配置权限
+  if (options.perms) {
+    require('./perms')(api, options)
   }
+
   api.render({
     './vue.config.js': './resources/vue.config.ejs',
-  }, { pages: JSON.stringify(pages) })
+  }, { pages: `[${options.pages}]` })
+
   api.render('./template')
+
   api.postProcessFiles(files => {
     let template = files['public/index.html']
     if (template) {

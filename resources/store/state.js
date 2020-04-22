@@ -1,5 +1,8 @@
 const metaEl = document.querySelector('meta[name=token]')
-const token = metaEl ? metaEl.content : ''
+const _token = metaElement?.content ?? ''
+const token = _token.includes('csrf_token') ? null : _token
 export default {
-  token
+  token,
+  menu: [],
+  userinfo: {}
 }

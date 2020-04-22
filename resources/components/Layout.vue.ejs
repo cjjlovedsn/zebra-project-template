@@ -1,0 +1,82 @@
+<template>
+  <base-layout :routes="$store.state.menu" :permissions="$store.getters.perms" link="/admin">
+    <span slot="nav"><%= title %> </span>
+    <div slot="menu">
+      <img
+        v-if="avatar"
+        :src="avatar"
+      >
+      <span
+        v-else
+        class="audi-icon-avatar"
+      ></span>
+      <el-dropdown trigger="click" @command="handleDropdown">
+        <span class="el-dropdown-link">
+          <span class="userName">{{ userName }}</span>
+          <i class="el-icon-arrow-down el-icon--right"></i>
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item
+            divided
+            command="sign-out"
+          >
+            <span class="font">退出</span>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+    </div>
+  </base-layout>
+</template>
+
+<script>
+import BaseLayout from '@/components/BaseLayout'
+import { cleanToken } from '../store/service'
+<% if (perms) { %>
+import { resetRouter } from '../router'
+<% } %>
+export default {
+  name: 'AdminLayout',
+
+  components: {
+    BaseLayout
+  },
+
+  computed: {
+    userInfo () {
+      return this.$store.state?.userinfo ?? {}
+    },
+    userName () {
+      // 优先显示真实姓名
+      return this.userInfo.nick_name || this.userInfo.email || this.userInfo.account_name
+    },
+    avatar () {
+      return this.userInfo.avatar
+    }
+  },
+
+  methods: {
+    handleDropdown (name) {
+      switch (name) {
+        case 'userInfo':
+          this.$router.push('/userInfo')
+          break
+        case 'change-password':
+          this.$router.push('/change-password')
+          break
+        case 'sign-out':
+          this.axios.get('/admin/logout', null, { silent: true }).finally(() => {
+            cleanToken()
+            <% if (perms) { %>
+              resetRouter()
+            <% } %>
+            this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+          })
+          break
+        default:
+          break
+      }
+    }
+  }
+}
+
+</script>
