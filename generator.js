@@ -101,9 +101,10 @@ module.exports = (api, options, rootOptions) => {
     require('./perms')(api, options)
   }
 
+  const pages = options.pages ? options.pages.split(',') : []
   api.render({
     './vue.config.js': './resources/vue.config.ejs',
-  }, { pages: `[${options.pages}]` })
+  }, { pages: JSON.stringify(pages) })
 
   api.render('./template')
 

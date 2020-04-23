@@ -1,5 +1,3 @@
-import axios from '../plugins/axios'
-
 const cache = {}
 /**
  * 获取token

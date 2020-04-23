@@ -28,7 +28,7 @@
 import RoleEditor from './components/EditorRole'
 import * as utils from '@/utils'
 import roles, { getRole, update } from './service'
-import permissions from '../service'
+import getPermissions from '../service'
 export default {
   name: 'Roles',
 
@@ -128,7 +128,7 @@ export default {
     },
     async createTabs () {
       const business = await this.getBusinessType()
-      const result = await permissions()
+      const result = await getPermissions()
       const temp1 = business.map(({ label, value, type }) => ({ label: `${label}路由`, value, type: 1 }))
       const temp2 = business.map(({ label, value }) => ({ label: `${label}接口`, value, type: 2 }))
       const data = temp1.concat(temp2)

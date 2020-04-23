@@ -62,6 +62,12 @@ Vue.use(Router)
 <% if (perms) { %>
 let routeIsAdded = false
 
+const getToken = () => {
+  if (store.state.token) return store.state.token
+  return store.dispatch(UPDATE_TOKEN)
+}
+
+
 const createRouter = () => {
   routeIsAdded = false
   return new Router({
@@ -94,7 +100,7 @@ router.beforeEach(async (to, from, next) => {
     document.title = to.meta.title || '<%= title %>'
   }
   try {
-    const token = await getToken()
+    const token = await getToken() 
     if (token) {
       if (to.path === '/login') {
         if (routeIsAdded) {

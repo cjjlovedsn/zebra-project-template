@@ -34,13 +34,13 @@ module.exports = (api, options) => {
   if (options.multiple) {
     const titles = options.titles ? options.titles.split(',') : []
     pages.forEach((page, i) => {
-      const template = getTemplate(`${constant.APP_DIR}/${page}`)
+      const template = getTemplate(`${constant.APP_DIR}/${page}`, { perms, auto })
       const title = titles[i]
       api.render(template, { name: page, title, perms, auto })
     })
     if (auto) {
     }
   } else {
-    api.render(getTemplate('./src'), { name: 'index', title: options.title, perms, auto })
+    api.render(getTemplate('./src', { perms, auto }), { name: 'index', title: options.title, perms, auto })
   }
 }

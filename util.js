@@ -21,6 +21,6 @@ const glob = root => {
   return result
 }
 
-console.log(glob('./resources/views/system'))
-
-module.exports = glob
+module.exports = {
+  glob: glob
+}
