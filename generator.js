@@ -13,7 +13,8 @@ module.exports = (api, options, rootOptions) => {
       'dayjs': '^1.7.8',
       'vue-cookie': '^1.1.4',
       'vue-router': '^3.0.1',
-      'vuex': '^3.0.1'
+      'vuex': '^3.0.1',
+      "nprogress": "^0.2.0",
     },
     devDependencies: {
       'compression-webpack-plugin': '^2.0.0',

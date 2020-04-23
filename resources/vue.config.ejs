@@ -123,5 +123,11 @@ module.exports = {
       }))
     }
   <%_ } _%>
+  },
+  pluginOptions: {
+    'style-resources-loader': {
+      preProcessor: 'scss',
+      patterns: ['./src/styles/variables.scss']
+    }
   }
 }
